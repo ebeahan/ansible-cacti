@@ -1,0 +1,9 @@
+---
+# This is a playbook to deploy a standalone Cacti server
+
+- hosts: cacti-servers
+  remote_user: vagrant
+  sudo: True
+
+  roles:
+    - cacti

@@ -1,0 +1,14 @@
+Alias /cacti    /usr/share/cacti
+
+<Directory /usr/share/cacti/>
+        <IfModule mod_authz_core.c>
+                # httpd 2.4
+                Require all granted
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+                # httpd 2.2
+                Order deny,allow
+                Deny from all
+                Allow from all
+        </IfModule>
+</Directory>

@@ -1,0 +1,66 @@
+---
+- name: Install deps
+  yum: name={{ item }} state=present 
+  with_items:
+    - httpd
+    - httpd-devel
+    - mysql
+    - mysql-server
+    - php-mysql
+    - php-pear
+    - php-common
+    - php-gd
+    - php-devel
+    - php
+    - php-mbstring
+    - php-cli
+    - php-snmp
+    - net-snmp-utils
+    - net-snmp-libs
+    - rrdtool
+
+- name: Start services
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - httpd
+    - mysqld
+    - snmpd
+
+- name: Modify IPtables
+  template: src=iptables-save dest=/etc/sysconfig/iptables
+  notify: restart iptables
+
+- name: Download EPEL
+  get_url: url=http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm dest=/tmp/epel-release-6-8.noarch.rpm
+
+- name: Install EPEL
+  command: rpm -ivh /tmp/epel-release-6-8.noarch.rpm
+
+- name: Install cacti
+  yum: name=cacti state=present
+
+- name: Update mysql root user password
+  command: /usr/bin/mysqladmin -u root password qwe123
+
+- name: Create .my.cnf for vagrant user
+  copy: src=my.cnf dest=/home/vagrant/.my.cnf owner=vagrant group=vagrant mode=0644
+
+- name: Prework for creating MySQL Cacti Database
+  copy: src=cacti.sql dest=/tmp/cacti.sql
+
+- name: Create MySQL Cacti Database
+  shell: /usr/bin/mysql -h localhost -u root -pqwe123 < /tmp/cacti.sql
+
+- name: Create tables in MySQL Cacti Database
+  shell: /usr/bin/mysql -h localhost -u root -pqwe123 -D cacti< /usr/share/doc/cacti-0.8.8h/cacti.sql
+
+- name: Modify /etc/cacti/db.php
+  template: src=db.php.j2 dest=/etc/cacti/db.php
+  notify: restart httpd
+
+- name: Modify Cacti Apache config
+  template: src=cacti.conf.j2 dest=/etc/httpd/conf.d/cacti.conf
+  notify: restart httpd
+
+- name: Enable Cacti PHP poller cron job
+  copy: src=cacti-cron dest=/etc/cron.d/cacti owner=root group=root mode=0644

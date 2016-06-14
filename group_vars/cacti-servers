@@ -1,0 +1,5 @@
+# Here are the variables for the Cacti installation
+
+http_port: 80
+database_username: "root"
+database_password: "qwe123"
