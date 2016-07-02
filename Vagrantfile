@@ -8,8 +8,16 @@
 Vagrant.configure(2) do |config|
 
     config.vm.define "cacti" do |cacti|
-        cacti.vm.box = "ubuntu/trusty64"
+        cacti.vm.box = "nrel/CentOS-6.5-x86_64"
         cacti.vm.hostname = "cacti"
         cacti.vm.network "private_network", ip: "192.168.33.50"
+    end
+
+  # Ansible provisioner.
+    config.vm.provision "ansible" do |ansible|
+        ansible.playbook = "site.yml"
+        ansible.inventory_path = "hosts"
+        ansible.sudo = true
+        ansible.limit = "all"
     end
 end
